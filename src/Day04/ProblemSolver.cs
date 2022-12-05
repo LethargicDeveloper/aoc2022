@@ -21,6 +21,8 @@ public partial class ProblemSolver
     [GeneratedRegex(@"\d+", RegexOptions.Compiled, "en-US")]
     private static partial Regex GeneratedRegex();
 
+    static Regex CompiledRegex = new Regex(@"\d+", RegexOptions.Compiled);
+
     public int SolvePart1()
         => PuzzleInput.Input001
             .Split("\r\n")
@@ -51,10 +53,9 @@ public partial class ProblemSolver
     [Benchmark]
     public int SolveWithCompiledRegex()
     {
-        var regex = new Regex(@"\d+", RegexOptions.Compiled);
         return PuzzleInput.Input001
             .Split("\r\n")
-            .Select(_ => regex.Matches(_)
+            .Select(_ => CompiledRegex.Matches(_)
                 .Select(x => int.Parse(x.Value))
                 .ToArray())
             .Where(Overlap)
@@ -63,13 +64,11 @@ public partial class ProblemSolver
 
     [Benchmark]
     public int SolveWithGeneratedRegex()
-    {
-        return PuzzleInput.Input001
+        => PuzzleInput.Input001
             .Split("\r\n")
             .Select(_ => GeneratedRegex().Matches(_)
                 .Select(x => int.Parse(x.Value))
                 .ToArray())
             .Where(Overlap)
             .Count();
-    }
 }

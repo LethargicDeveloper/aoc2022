@@ -1,6 +1,4 @@
-﻿using System.Runtime.CompilerServices;
-
-namespace AocHelper;
+﻿namespace AocHelper;
 
 public static class Extensions
 {
@@ -12,4 +10,7 @@ public static class Extensions
 
     public static IEnumerable<string> SplitLines(this string str)
         => str.Split("\r\n");
+
+    public static string AsString(this IEnumerable<char> str)
+        => new(str.ToArray());
 }

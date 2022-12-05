@@ -86,4 +86,46 @@ public partial class PuzzleSolver
 
         return new string(stacks.Select(_ => _.Pop()).ToArray());
     }
+
+    [Benchmark]
+    public string SolvePart2Regex()
+    {
+        var (stackInput, moveInput) = ParseInputRegex(PuzzleInput.Input001);
+        var stacks = stackInput
+            .SplitLines()
+            .Reverse()
+            .Skip(1)
+            .Aggregate(InitializeStacks(9), (acc, cur) =>
+            {
+                StackRegex().Matches(cur).ToList().ForEach(_ => acc[(_.Index - 1) / 4].Push(_.Value[0]));
+                return acc;
+            });
+
+        return moveInput
+            .SplitLines()
+            .Select(_ => MatchRegex()
+                .Matches(_)
+                .Select(m => int.Parse(m.Value))
+                .ToList())
+            .Aggregate(stacks, (acc, cur) =>
+            {
+                Enumerable.Range(0, cur[0])
+                    .Select(_ => acc[cur[1] - 1].Pop())
+                    .Reverse()
+                    .ToList()
+                    .ForEach(acc[cur[2] - 1].Push);
+                return acc;
+            })
+            .Select(_ => _.Pop())
+            .AsString();
+    }
+
+    (string StackInput, string MoveInput) ParseInputRegex(string input)
+        => input.Split("\r\n\r\n") switch { var x => (x[0], x[1]) };
+
+    [GeneratedRegex("[a-zA-Z]")]
+    private static partial Regex StackRegex();
+
+    [GeneratedRegex("\\d+")]
+    private static partial Regex MatchRegex();
 }

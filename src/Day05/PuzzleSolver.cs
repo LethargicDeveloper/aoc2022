@@ -6,7 +6,7 @@ namespace Day05;
 [MinColumn, MaxColumn, MemoryDiagnoser]
 public partial class PuzzleSolver
 {
-    Stack<char>[] CreateStacks(int size)
+    Stack<char>[] InitializeStacks(int size)
     {
         var stack = new Stack<char>[size];
         for (int i = 0; i < size; ++i)
@@ -25,7 +25,7 @@ public partial class PuzzleSolver
     Stack<char>[] ParseStacks(List<string> input)
     {
         int stackSize = input[0][^2] - '0';
-        var stacks = CreateStacks(stackSize);
+        var stacks = InitializeStacks(stackSize);
         foreach (var line in input.Skip(1))
         {
             for (int i = 0, j = 1; j < input[0].Length; ++i, j += 4)

@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 namespace Day04;
 
 [MinColumn, MaxColumn, MemoryDiagnoser]
-public partial class ProblemSolver
+public partial class PuzzleSolver
 {
     int[] ToRange(string list)
         => list.Split("-").Select(int.Parse).ToArray();
@@ -12,8 +12,8 @@ public partial class ProblemSolver
     bool InRange(int[] r1, int[] r2)
         => r1[0] <= r2[0] && r1[1] >= r2[1];
 
-    bool Overlap(int[] r1, int[] r2)
-        => r1[0] <= r2[1] && r1[1] >= r2[0];
+    bool Overlap(int[][] r)
+        => r[0][0] <= r[1][1] && r[0][1] >= r[1][0];
 
     bool Overlap(int[] r)
         => r[0] <= r[3] && r[1] >= r[2];
@@ -37,7 +37,7 @@ public partial class ProblemSolver
             .Select(_ => _.Split(",")
                 .Select(ToRange)
                 .ToArray())
-            .Where(_ => Overlap(_[0], _[1]))
+            .Where(Overlap)
             .Count();
 
     [Benchmark]

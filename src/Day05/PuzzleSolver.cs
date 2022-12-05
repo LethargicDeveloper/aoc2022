@@ -24,12 +24,6 @@ public partial class PuzzleSolver
 
     Stack<char>[] ParseStacks(List<string> input)
     {
-        //input
-        //    .Skip(1)
-        //    .Select(_ => _.Where((c, i) => (i == 1 || i % 4 == 0) && !char.IsWhiteSpace(c)))
-        //    .Select(_ => _.sel)
-
-
         int stackSize = input[0][^2] - '0';
         var stacks = CreateStacks(stackSize);
         foreach (var line in input.Skip(1))
@@ -51,11 +45,9 @@ public partial class PuzzleSolver
             .ToList());
 
     [Benchmark]
-    public void SolvePart1()
+    public string SolvePart1()
     {
         var (stackInput, moveInput) = ParseInput(PuzzleInput.Input001);
-
-
         var stacks = ParseStacks(stackInput);
         var moves = ParseMoves(moveInput);
 
@@ -68,11 +60,11 @@ public partial class PuzzleSolver
             }
         }
 
-        new string(stacks.Select(_ => _.Pop()).ToArray()).Log("Part 1");
+        return new string(stacks.Select(_ => _.Pop()).ToArray());
     }
 
     [Benchmark]
-    public void SolvePart2()
+    public string SolvePart2()
     {
         var (stackInput, moveInput) = ParseInput(PuzzleInput.Input001);
         var stacks = ParseStacks(stackInput);
@@ -92,6 +84,6 @@ public partial class PuzzleSolver
             }
         }
 
-        new string(stacks.Select(_ => _.Pop()).ToArray()).Log("Part 2");
+        return new string(stacks.Select(_ => _.Pop()).ToArray());
     }
 }

@@ -52,15 +52,13 @@ public partial class PuzzleSolver
 
     [Benchmark]
     public int SolveWithCompiledRegex()
-    {
-        return PuzzleInput.Input001
+        => PuzzleInput.Input001
             .Split("\r\n")
             .Select(_ => CompiledRegex.Matches(_)
                 .Select(x => int.Parse(x.Value))
                 .ToArray())
             .Where(Overlap)
             .Count();
-    }
 
     [Benchmark]
     public int SolveWithGeneratedRegex()

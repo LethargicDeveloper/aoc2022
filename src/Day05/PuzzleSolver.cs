@@ -103,7 +103,7 @@ public partial class PuzzleSolver
 
         return moveInput
             .SplitLines()
-            .Select(_ => MatchRegex()
+            .Select(_ => MoveRegex()
                 .Matches(_)
                 .Select(m => int.Parse(m.Value))
                 .ToList())
@@ -120,12 +120,12 @@ public partial class PuzzleSolver
             .AsString();
     }
 
-    (string StackInput, string MoveInput) ParseInputRegex(string input)
+    (string, string) ParseInputRegex(string input)
         => input.Split("\r\n\r\n") switch { var x => (x[0], x[1]) };
 
     [GeneratedRegex("[a-zA-Z]")]
     private static partial Regex StackRegex();
 
     [GeneratedRegex("\\d+")]
-    private static partial Regex MatchRegex();
+    private static partial Regex MoveRegex();
 }

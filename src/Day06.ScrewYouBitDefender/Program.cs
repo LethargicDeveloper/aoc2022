@@ -1,5 +1,4 @@
 ﻿using AocHelper;
-using Day06;
 
 var input = File.ReadAllText("Input001.txt");
 

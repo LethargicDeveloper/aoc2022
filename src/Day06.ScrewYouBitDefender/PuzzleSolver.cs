@@ -1,6 +1,4 @@
-﻿namespace Day06;
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     readonly string input;
 

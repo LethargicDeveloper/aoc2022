@@ -1,7 +1,6 @@
-﻿using Day03;
+﻿var input = File.ReadAllLines("Input001.txt");
 
-PuzzleInput.Input001
-    .Split("\r\n")
+input
     .Select(_ => new[]
     {
         _[..(_.Length / 2)],
@@ -12,8 +11,7 @@ PuzzleInput.Input001
     .Sum()
     .Log("Part 01");
 
-PuzzleInput.Input001
-    .Split("\r\n")
+input
     .Select((v, i) => new { i, v })
     .GroupBy(_ => _.i / 3)
     .Select(_ => _.Select(v => v.v)

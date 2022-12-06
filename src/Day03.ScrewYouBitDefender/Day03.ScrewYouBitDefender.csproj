@@ -11,4 +11,10 @@
     <ProjectReference Include="..\AocHelper\AocHelper.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <None Update="Input001.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>

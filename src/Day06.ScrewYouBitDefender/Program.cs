@@ -1,5 +1,8 @@
 ﻿using AocHelper;
 using Day06;
 
-new PuzzleSolver().SolvePart1().Log("Part 1");
-new PuzzleSolver().SolvePart2().Log("Part 2");
+var input = File.ReadAllText("Input001.txt");
+
+var ps = new PuzzleSolver(input);
+ps.SolvePart1().Log("Part 1");
+ps.SolvePart2().Log("Part 2");

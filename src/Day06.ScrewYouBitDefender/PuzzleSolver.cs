@@ -12,5 +12,6 @@
           .First(_ => _.v.Distinct().Count() == size).i + size;
 
     public int SolvePart1() => FindIndex(4);
+    
     public int SolvePart2() => FindIndex(14);
 }

@@ -1,4 +1,6 @@
-﻿public partial class PuzzleSolver
+﻿using System.Security.Cryptography.X509Certificates;
+
+public partial class PuzzleSolver
 {
     readonly List<string> input;
 
@@ -6,6 +8,18 @@
     {
         this.input = input;
     }
+
+    //private Dir ParseDirectoryTree()
+    //{
+    //    this.input.Aggregate(new Dir(), (acc, cur) =>
+    //    {
+    //        cur switch
+    //        {
+    //            var x when x == "$ cd .." => 0,
+    //            var x when x == "$ cd " => x[5..]
+    //        }
+    //    });
+    //}
 
     private Dictionary<string, Dir> ParseFileSystem()
     {

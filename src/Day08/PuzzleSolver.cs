@@ -1,4 +1,8 @@
-﻿public partial class PuzzleSolver
+﻿using BenchmarkDotNet.Attributes;
+using Microsoft.CodeAnalysis.CSharp;
+
+[MinColumn, MaxColumn, MemoryDiagnoser]
+public partial class PuzzleSolver
 {
     readonly List<string> input;
 
@@ -6,6 +10,9 @@
     {
         this.input = File.ReadLines("Input001.txt").ToList();
     }
+
+    List<List<int>> ParseForest()
+        => this.input.Select(_ => _.Select(_ => _ - '0').ToList()).ToList();
 
     bool TreeIsVisible(List<List<int>> forest, int x, int y)
     {
@@ -109,9 +116,7 @@
 
     public long SolvePart1()
     {
-        var forest = this.input
-            .Select(_ => _.Select(_ => _ - '0').ToList())
-            .ToList();
+        var forest = ParseForest();
 
         long visible = 0;
         for (int x = 0; x < forest[0].Count; ++x)
@@ -128,11 +133,10 @@
         return visible;
     }
 
+    [Benchmark]
     public long SolvePart2()
     {
-        var forest = this.input
-            .Select(_ => _.Select(_ => _ - '0').ToList())
-            .ToList();
+        var forest = ParseForest();
 
         var distances = new List<(int, int, long)>();
         for (int x = 0; x < forest[0].Count; ++x)

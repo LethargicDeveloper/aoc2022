@@ -1,4 +1,6 @@
-﻿public partial class PuzzleSolver
+﻿using System.Security;
+
+public partial class PuzzleSolver
 {
     readonly List<string> input;
 
@@ -18,7 +20,11 @@
             if (line.StartsWith("$ cd "))
             {
                 var dir = line[5..];
-                if (dir != "..")
+                if (dir == "..")
+                {
+                    currentDir = currentDir?.Parent;
+                }
+                else
                 {
                     var fullName = (currentDir?.FullName ?? "") + dir + (currentDir != null ? "/" : "");
                     if (!dict.TryGetValue(fullName, out currentDir))
@@ -51,14 +57,9 @@
                         {
                             currentDir.Size += long.Parse(item.Split(' ')[0]);
                         }
-
                     }
                     --i;
                     continue;
-                }
-                else
-                {
-                    currentDir = currentDir?.Parent;
                 }
             }
         }

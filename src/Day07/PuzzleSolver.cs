@@ -1,8 +1,4 @@
-﻿using System.IO.Pipes;
-using System.Security;
-using System.Text.RegularExpressions;
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     readonly List<string> input;
 
@@ -11,7 +7,7 @@ public partial class PuzzleSolver
         this.input = input;
     }
 
-    private Dictionary<string, Dir> GetDirTree()
+    private Dictionary<string, Dir> ParseFileSystem()
     {
         var dict = new Dictionary<string, Dir>();
 
@@ -71,14 +67,14 @@ public partial class PuzzleSolver
     }
 
     public long SolvePart1()
-        => GetDirTree()
+        => ParseFileSystem()
             .Select(_ => _.Value.TotalSize)
             .Where(_ => _ <= 100000)
             .Sum();
 
     public long SolvePart2()
     {
-        var dict = GetDirTree();
+        var dict = ParseFileSystem();
         var unused = 70000000 - dict["/"].TotalSize;
 
         return dict
@@ -91,10 +87,10 @@ public partial class PuzzleSolver
     class Dir
     {
         public string Name { get; init; } = string.Empty;
+        public string FullName => Parent?.FullName == null ? Name : Parent.FullName + Name + "/";
         public long Size { get; set; }
         public List<Dir> Children { get; init; } = new List<Dir>();
         public Dir? Parent { get; set; }
         public long TotalSize => Size + Children.Sum(_ => _.TotalSize);
-        public string FullName => Parent?.FullName == null ? Name : Parent.FullName + Name + "/";
     }
 }

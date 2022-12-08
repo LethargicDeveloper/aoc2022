@@ -1,11 +1,16 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Text.RegularExpressions;
 
-namespace Day04;
-
 [MinColumn, MaxColumn, MemoryDiagnoser]
 public partial class PuzzleSolver
 {
+    readonly List<string> input;
+
+    public PuzzleSolver()
+    {
+        this.input = File.ReadLines("Input001.txt").ToList();
+    }
+
     int[] ToRange(string list)
         => list.Split("-").Select(int.Parse).ToArray();
 
@@ -24,16 +29,14 @@ public partial class PuzzleSolver
     static Regex CompiledRegex = new Regex(@"\d+", RegexOptions.Compiled);
 
     public int SolvePart1()
-        => PuzzleInput.Input001
-            .Split("\r\n")
+        => this.input
             .Select(_ => _.Split(",").Select(ToRange).ToArray())
             .Where(_ => InRange(_[0], _[1]) || InRange(_[1], _[0]))
             .Count();
 
     [Benchmark]
     public int SolveWithStringSplit()
-        => PuzzleInput.Input001
-            .Split("\r\n")
+        => this.input
             .Select(_ => _.Split(",")
                 .Select(ToRange)
                 .ToArray())
@@ -42,8 +45,7 @@ public partial class PuzzleSolver
 
     [Benchmark]
     public int SolveWithRegex()
-        => PuzzleInput.Input001
-            .Split("\r\n")
+        => this.input
             .Select(_ => Regex.Matches(_, @"\d+")
                 .Select(x => int.Parse(x.Value))
                 .ToArray())
@@ -52,8 +54,7 @@ public partial class PuzzleSolver
 
     [Benchmark]
     public int SolveWithCompiledRegex()
-        => PuzzleInput.Input001
-            .Split("\r\n")
+        => this.input
             .Select(_ => CompiledRegex.Matches(_)
                 .Select(x => int.Parse(x.Value))
                 .ToArray())
@@ -62,8 +63,7 @@ public partial class PuzzleSolver
 
     [Benchmark]
     public int SolveWithGeneratedRegex()
-        => PuzzleInput.Input001
-            .Split("\r\n")
+        => this.input
             .Select(_ => GeneratedRegex().Matches(_)
                 .Select(x => int.Parse(x.Value))
                 .ToArray())

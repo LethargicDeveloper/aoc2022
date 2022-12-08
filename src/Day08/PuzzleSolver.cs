@@ -1,12 +1,10 @@
-﻿using System.Net.Mime;
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     readonly List<string> input;
 
-    public PuzzleSolver(List<string> input)
+    public PuzzleSolver()
     {
-        this.input = input;
+        this.input = File.ReadLines("Input001.txt").ToList();
     }
 
     bool TreeIsVisible(List<List<int>> forest, int x, int y)

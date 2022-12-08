@@ -2,9 +2,9 @@
 {
     readonly string input;
 
-    public PuzzleSolver(string input)
+    public PuzzleSolver()
     {
-        this.input = input;
+        this.input = File.ReadAllText("Input001.txt");
     }
 
     int FindIndex(int size)

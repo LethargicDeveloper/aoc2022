@@ -1,11 +1,16 @@
 ﻿using BenchmarkDotNet.Attributes;
 using System.Text.RegularExpressions;
 
-namespace Day05;
-
 [MinColumn, MaxColumn, MemoryDiagnoser]
 public partial class PuzzleSolver
 {
+    readonly string input;
+
+    public PuzzleSolver()
+    {
+        this.input = File.ReadAllText("Input001");
+    }
+
     Stack<char>[] InitializeStacks(int size)
     {
         var stack = new Stack<char>[size];
@@ -47,7 +52,7 @@ public partial class PuzzleSolver
     [Benchmark]
     public string SolvePart1()
     {
-        var (stackInput, moveInput) = ParseInput(PuzzleInput.Input001);
+        var (stackInput, moveInput) = ParseInput(this.input);
         var stacks = ParseStacks(stackInput);
         var moves = ParseMoves(moveInput);
 
@@ -66,7 +71,7 @@ public partial class PuzzleSolver
     [Benchmark]
     public string SolvePart2()
     {
-        var (stackInput, moveInput) = ParseInput(PuzzleInput.Input001);
+        var (stackInput, moveInput) = ParseInput(this.input);
         var stacks = ParseStacks(stackInput);
         var moves = ParseMoves(moveInput);
 
@@ -90,7 +95,7 @@ public partial class PuzzleSolver
     [Benchmark]
     public string SolvePart2Regex()
     {
-        var (stackInput, moveInput) = ParseInputRegex(PuzzleInput.Input001);
+        var (stackInput, moveInput) = ParseInputRegex(this.input);
         var stacks = stackInput
             .SplitLines()
             .Reverse()

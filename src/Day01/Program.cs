@@ -1,6 +1,6 @@
-﻿using Day01;
+﻿var input = File.ReadAllText("Input001.txt");
 
-PuzzleInput.Input001
+input
     .Split("\r\n\r\n")
     .Select(_ => _.Split("\r\n")
         .Select(int.Parse)
@@ -8,7 +8,7 @@ PuzzleInput.Input001
     .Max()
     .Log("Part 1");
 
-PuzzleInput.Input001
+input
     .Split("\r\n\r\n")
     .Select(_ => _.Split("\r\n")
         .Select(int.Parse)

@@ -1,7 +1,6 @@
-﻿using Day02;
+﻿var input = File.ReadLines("Input001.txt");
 
-PuzzleInput.Input001
-    .Split("\r\n")
+input
     .Select(_ => (_[0] - '@', _[2] - 'W'))
     .Select(_ => _ switch
     {
@@ -14,8 +13,7 @@ PuzzleInput.Input001
     .Sum()
     .Log("Part 1");
 
-PuzzleInput.Input001
-    .Split("\r\n")
+input    
     .Select(_ => (_[0] - '@', _[2] - 'W'))
     .Select(_ =>
     {

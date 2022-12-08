@@ -1,25 +1,11 @@
-﻿using System.Security.Cryptography.X509Certificates;
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     readonly List<string> input;
 
-    public PuzzleSolver(List<string> input)
+    public PuzzleSolver()
     {
-        this.input = input;
+        this.input = File.ReadLines("Input001.txt").ToList();
     }
-
-    //private Dir ParseDirectoryTree()
-    //{
-    //    this.input.Aggregate(new Dir(), (acc, cur) =>
-    //    {
-    //        cur switch
-    //        {
-    //            var x when x == "$ cd .." => 0,
-    //            var x when x == "$ cd " => x[5..]
-    //        }
-    //    });
-    //}
 
     private Dictionary<string, Dir> ParseFileSystem()
     {

@@ -1,7 +1,3 @@
-﻿using AocHelper;
-
-var input = File.ReadAllText("Input001.txt");
-
-var ps = new PuzzleSolver(input);
+﻿var ps = new PuzzleSolver();
 ps.SolvePart1().Log("Part 1");
 ps.SolvePart2().Log("Part 2");

@@ -80,13 +80,8 @@ public partial class PuzzleSolver
                     var prevKnot = knotPos[i - 1];
                     if (Math.Abs(prevKnot.x - knot.x) > 1 || Math.Abs(prevKnot.y - knot.y) > 1)
                     {
-                        var x = knot.x < prevKnot.x ? knot.x + 1 :
-                                knot.x > prevKnot.x ? knot.x - 1 :
-                                knot.x;
-
-                        var y = knot.y < prevKnot.y ? knot.y + 1 :
-                                knot.y > prevKnot.y ? knot.y - 1 :
-                                knot.y;
+                        var x = knot.x + Math.Sign(prevKnot.x - knot.x);
+                        var y = knot.y + Math.Sign(prevKnot.y - knot.y);
 
                         knot = knotPos[i] = (x, y);
                     }

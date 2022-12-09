@@ -67,36 +67,31 @@ public partial class PuzzleSolver
                 var headPos = knotPos[0];
                 knotPos[0] = dir switch
                 {
-                    "U" => headPos with { y = headPos.y - 1 },
-                    "D" => headPos with { y = headPos.y + 1 },
-                    "L" => headPos with { x = headPos.x - 1 },
-                    "R" => headPos with { x = headPos.x + 1 },
+                    "U" => (headPos.x, headPos.y - 1),
+                    "D" => (headPos.x, headPos.y + 1),
+                    "L" => (headPos.x - 1, headPos.y),
+                    "R" => (headPos.x + 1, headPos.y),
                     _ => throw new NotImplementedException()
                 };
 
                 for (int i = 1; i < knotPos.Count; ++i)
                 {
                     var knot = knotPos[i];
-                    var prevKnow = knotPos[i - 1];
-                    while (Math.Abs(prevKnow.x - knot.x) > 1 || Math.Abs(prevKnow.y - knot.y) > 1)
+                    var prevKnot = knotPos[i - 1];
+                    if (Math.Abs(prevKnot.x - knot.x) > 1 || Math.Abs(prevKnot.y - knot.y) > 1)
                     {
-                        var x = prevKnow.x switch
-                        {
-                            { } when knot.x < prevKnow.x => knot.x + 1,
-                            { } when knot.x > prevKnow.x => knot.x - 1,
-                            _ => knot.x
-                        };
+                        var x = knot.x < prevKnot.x ? knot.x + 1 :
+                                knot.x > prevKnot.x ? knot.x - 1 :
+                                knot.x;
 
-                        var y = prevKnow.y switch
-                        {
-                            { } when knot.y < prevKnow.y => knot.y + 1,
-                            { } when knot.y > prevKnow.y => knot.y - 1,
-                            _ => knot.y
-                        };
+                        var y = knot.y < prevKnot.y ? knot.y + 1 :
+                                knot.y > prevKnot.y ? knot.y - 1 :
+                                knot.y;
 
                         knot = knotPos[i] = (x, y);
-                        visited.Add(knotPos[9]); // 2532 - 2768
                     }
+                    
+                    visited.Add(knotPos[9]);
                 }
             }
         }

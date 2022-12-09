@@ -83,7 +83,7 @@ public partial class PuzzleSolver
                         var x = knot.x + Math.Sign(prevKnot.x - knot.x);
                         var y = knot.y + Math.Sign(prevKnot.y - knot.y);
 
-                        knot = knotPos[i] = (x, y);
+                        knotPos[i] = (x, y);
                     }
                     
                     visited.Add(knotPos[9]);

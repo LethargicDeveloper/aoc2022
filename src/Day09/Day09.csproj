@@ -12,7 +12,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\src\AocHelper\AocHelper.csproj" />
+    <ProjectReference Include="..\AocHelper\AocHelper.csproj" />
   </ItemGroup>
 
   <ItemGroup>

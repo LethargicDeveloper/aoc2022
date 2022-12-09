@@ -85,7 +85,6 @@ public partial class PuzzleSolver
 
                         knotPos[i] = (x, y);
                     }
-                    
                 }
                 
                 visited.Add(knotPos[9]);

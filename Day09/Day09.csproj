@@ -8,15 +8,18 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="BenchmarkDotNet" Version="0.13.2" />
+    <PackageReference Include="benchmarkdotnet" Version="0.13.2" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\AocHelper\AocHelper.csproj" />
+    <ProjectReference Include="..\src\AocHelper\AocHelper.csproj" />
   </ItemGroup>
 
   <ItemGroup>
     <None Update="Input001.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="InputExample2.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="InputExample.txt">

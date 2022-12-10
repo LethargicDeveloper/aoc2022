@@ -44,8 +44,7 @@ public partial class PuzzleSolver
 
     void NextCycle(StringBuilder crt, int pos, ref int cycles)
     {
-        cycles++;
-        int x = (cycles - 1) % 40;
+        int x = (++cycles - 1) % 40;
 
         crt.Append(x >= pos - 1 && x <= pos + 1 ? "#" : ".");
         if (x == 39) crt.AppendLine();

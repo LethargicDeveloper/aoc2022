@@ -1,7 +1,4 @@
 ﻿using BenchmarkDotNet.Attributes;
-using Microsoft.Diagnostics.Tracing.Parsers.FrameworkEventSource;
-using Microsoft.Diagnostics.Tracing.Parsers.JScript;
-using Microsoft.Extensions.Primitives;
 using System.Text;
 
 [MinColumn, MaxColumn, MemoryDiagnoser]

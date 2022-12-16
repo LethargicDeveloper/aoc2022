@@ -17,7 +17,6 @@ public partial class PuzzleSolver
             .Select(_ => _.Select(chr => chr).ToArray())
             .ToArray();
 
-
     public long SolvePart1()
     {
         var map = CreateMap();
@@ -30,15 +29,36 @@ public partial class PuzzleSolver
 
     public long SolvePart2()
     {
-        return 0;
+        var map = CreateMap();
+
+        var dist = new List<long>();
+        foreach (var startPos in GetStartPositions(map))
+        {
+            var pathFinder = new PathFinder(map, startPos);
+            dist.Add(pathFinder.MinDistance());
+        }
+
+        return dist.Where(_ => _ > 0).Min();
+    }
+
+    IEnumerable<(int, int)> GetStartPositions(char[][] map)
+    {
+        var list = new List<(int, int)>();
+        for (int y = 0; y < map.Length; ++y)
+            for (int x = 0; x < map[0].Length; ++x)
+                if (map[y][x] == 'a') list.Add((y, x));
+
+        return list;
     }
 
     class PathFinder
     {
         readonly char[][] map;
+        (int, int)? startPos = null;
 
-        public PathFinder(char[][] map)
+        public PathFinder(char[][] map, (int, int)? startPos = null)
         {
+            this.startPos = startPos;
             this.map = map;
         }
 
@@ -50,20 +70,24 @@ public partial class PuzzleSolver
         }
 
         bool InRange(char height1, char height2)
-            => (height1 == 'z' && height2 == 'E') || (height1 >= height2 - 1 && height1 <= height2 + 1);
+            => ("yz".Contains(height1) && height2 == 'E') || (height2 != 'E' && (height2 <= height1 + 1));
 
         public ((int, int), (int, int)) GetStartAndEndPos()
         {
-            var startPos = (0, 0);
+            var startPos = this.startPos ?? (0, 0);
             var endPos = (0, 0);
             for (int y = 0; y < map.Length; ++y)
                 for (int x = 0; x < map[0].Length; ++x)
                 {
                     var c = map[y][x];
+
                     if (c == 'S')
                     {
                         map[y][x] = 'a';
-                        startPos = (y, x);
+                        if (this.startPos == null)
+                        {
+                            startPos = (y, x);
+                        }
                     }
 
                     if (c == 'E')
@@ -108,18 +132,15 @@ public partial class PuzzleSolver
             
             while (queue.TryDequeue(out var u))
             {
-                //PrintMap(u);
-
+                //PrintMap(u, distance);
                 if (u == end) break;
 
                 foreach (var v in Neighbors(u).Where(queue.Contains))
                 {
-                    //if (!InRange(map[u.Y][u.X], map[v.Y][v.X]))
-                    //{
-                    //    continue;
-                    //};
+                    if (!InRange(map[u.Y][u.X], map[v.Y][v.X]))
+                        continue;
 
-                    var alt = !InRange(map[u.Y][u.X], map[v.Y][v.X]) ? distance[u] + 0 : distance[u] + 1;
+                    var alt = distance[u] + 1;
                     if (alt < distance[v])
                     {
                         distance[v] = alt;
@@ -134,7 +155,7 @@ public partial class PuzzleSolver
             return (distance, previous);
         }
 
-        void PrintMap((int, int) pos)
+        void PrintMap((int, int) pos, Dictionary<(int, int), long> dest)
         {
             var sb = new StringBuilder();
             for (int y = 0; y < map.Length; ++y)
@@ -144,7 +165,13 @@ public partial class PuzzleSolver
                     if ((y, x) == pos)
                         sb.Append("@");
                     else
-                        sb.Append(map[y][x]);
+                    {
+                        sb.Append((Math.Abs(dest[(y, x)]) > 100
+                            ? map[y][x]
+                            : (Math.Abs(dest[(y, x)]) > 9
+                                ? "+"
+                                : dest[(y, x)])));
+                    }
                 }
 
                 sb.AppendLine();

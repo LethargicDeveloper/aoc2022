@@ -1,6 +1,9 @@
-﻿using System.Linq;
-using System.Reflection.Metadata.Ecma335;
+﻿using System.Net.Security;
 using System.Text.RegularExpressions;
+
+// 5793 - too high
+// 1483 - too low
+// 1381 - too low
 
 public partial class PuzzleSolver
 {
@@ -18,75 +21,55 @@ public partial class PuzzleSolver
             .Select(_ => _.Split("\r\n").ToList())
             .ToList();
 
-        var order = new List<int>();
+        var orderedPackets = new List<int>();
         for (int i = 0; i < pairs.Count; ++i)
         {
             var pair = pairs[i];
             string p1 = pair[0];
             string p2 = pair[1];
 
-            order.Add(ComparePackets(p1, p2) ? i + 1 : 0);
+            var inOrder = ArePacketsInOrder(p1, p2);
+            if (inOrder)
+                orderedPackets.Add(i + 1);
         }
 
-        return order.Sum();
+        return orderedPackets.Sum();
     }
 
-    bool ComparePackets(string p1, string p2, bool comparingList = false)
+    bool ArePacketsInOrder(string p1, string p2)
     {
-        while (!string.IsNullOrEmpty(p1) || !string.IsNullOrEmpty(p2))
+        while (true)
         {
-            if (p1.StartsWith("[") && !p2.StartsWith("["))
-                p2 = "[" + p2;
-            if (p2.StartsWith("[") && !p1.StartsWith("["))
-                p1 = "[" + p1;
-
             var data1 = GetNextData(ref p1);
             var data2 = GetNextData(ref p2);
 
-            if (string.IsNullOrEmpty(data1) && !string.IsNullOrEmpty(data2))
-                return true;
-
-            if (string.IsNullOrEmpty(data2) && !string.IsNullOrEmpty(data1))
-                return comparingList;
-
-            var isLeftInt = int.TryParse(data1, out int left);
-            var isRightInt = int.TryParse(data2, out int right);
+            var isLeftInt = int.TryParse(data1, out var left);
+            var isRightInt = int.TryParse(data2, out var right);
 
             if (isLeftInt && isRightInt)
             {
-                if (right < left) return false;
+                if (left < right) return true;
+                if (left > right) return false;
             }
             else if (!isLeftInt && !isRightInt)
             {
-                if (!ComparePackets(data1, data2, true))
-                    return false;
-            }
-            else
-            {
-                data1 = isLeftInt ? $"[{data1}]" : data1;
-                data2 = isRightInt ? $"[{data2}]" : data2;
-                if (!ComparePackets(data1, data2, true))
-                    return false;
+
             }
         }
-
-        var noMismatch = string.IsNullOrEmpty(p1);
-        return noMismatch;
     }
 
     string GetNextData(ref string packet)
     {
-        var intMatch = Regex.Match(packet, @"^[\[,]?(\d+)[,\]]");
+        var intMatch = Regex.Match(packet, @"^[\[](\d+)");
         if (intMatch.Success)
         {
-            packet = packet.Substring(intMatch.Index + 2);
-            if (string.IsNullOrEmpty(packet))
-                return "";
-
-            packet = packet[0] == ']' ? packet[1..] : packet;
+            packet = intMatch.Index + 2 > packet.Length - 1
+                ? ""
+                : $"[{packet.Substring(intMatch.Index + 2).Trim(',')}";
             return intMatch.Groups[1].Value;
         }
-        else
+
+        if (packet.StartsWith("["))
         {
             int count = 0;
             for (int i = 1; i < packet.Length; ++i)
@@ -99,12 +82,14 @@ public partial class PuzzleSolver
                 {
                     var list = packet[1..(i + 1)];
                     packet = packet[(i + 2)..];
+                    if (!string.IsNullOrEmpty(packet))
+                        packet = $"[{packet.Trim(',')}";
                     return list;
                 }
             }
-
-            return "";
         }
+
+        return "";
     }
 
     public long SolvePart2()

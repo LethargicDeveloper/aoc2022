@@ -1,99 +1,117 @@
-﻿using System.Net.Security;
-using System.Text.RegularExpressions;
-
-// 5793 - too high
-// 1483 - too low
-// 1381 - too low
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     readonly string input;
 
     public PuzzleSolver()
     {
-        this.input = File.ReadAllText("InputExample.txt");
+        this.input = File.ReadAllText("Input001.txt");
     }
 
     public long SolvePart1()
     {
-        var pairs = this.input
+        return this.input
             .Split("\r\n\r\n")
             .Select(_ => _.Split("\r\n").ToList())
-            .ToList();
-
-        var orderedPackets = new List<int>();
-        for (int i = 0; i < pairs.Count; ++i)
-        {
-            var pair = pairs[i];
-            string p1 = pair[0];
-            string p2 = pair[1];
-
-            var inOrder = ArePacketsInOrder(p1, p2);
-            if (inOrder)
-                orderedPackets.Add(i + 1);
-        }
-
-        return orderedPackets.Sum();
-    }
-
-    bool ArePacketsInOrder(string p1, string p2)
-    {
-        while (true)
-        {
-            var data1 = GetNextData(ref p1);
-            var data2 = GetNextData(ref p2);
-
-            var isLeftInt = int.TryParse(data1, out var left);
-            var isRightInt = int.TryParse(data2, out var right);
-
-            if (isLeftInt && isRightInt)
-            {
-                if (left < right) return true;
-                if (left > right) return false;
-            }
-            else if (!isLeftInt && !isRightInt)
-            {
-
-            }
-        }
-    }
-
-    string GetNextData(ref string packet)
-    {
-        var intMatch = Regex.Match(packet, @"^[\[](\d+)");
-        if (intMatch.Success)
-        {
-            packet = intMatch.Index + 2 > packet.Length - 1
-                ? ""
-                : $"[{packet.Substring(intMatch.Index + 2).Trim(',')}";
-            return intMatch.Groups[1].Value;
-        }
-
-        if (packet.StartsWith("["))
-        {
-            int count = 0;
-            for (int i = 1; i < packet.Length; ++i)
-            {
-                var c = packet[i];
-                if (c == '[') count++;
-                else if (c == ']') count--;
-
-                if (count == 0)
-                {
-                    var list = packet[1..(i + 1)];
-                    packet = packet[(i + 2)..];
-                    if (!string.IsNullOrEmpty(packet))
-                        packet = $"[{packet.Trim(',')}";
-                    return list;
-                }
-            }
-        }
-
-        return "";
+            .Select(Packet.Parse)
+            .Select((p, i) => (i: i + 1, v: Packet.Compare(p)))
+            .Where(_ => _.v)
+            .Sum(_ => _.i);
     }
 
     public long SolvePart2()
     {
         return 0;
+    }
+
+    class Packet
+    {
+        readonly List<object> packets;
+
+        private Packet()
+            : this(new List<object>())
+        { }
+
+        private Packet(List<object> packets)
+        {
+            this.packets = packets;
+        }
+
+        public static (Packet, Packet) Parse(List<string> packet)
+            => packet.Select(CreatePacket).ToArray() switch { var a => (a[0], a[1]) };
+
+        static Packet CreatePacket(string input)
+        {
+            var packet = new List<object>();
+            var stack = new Stack<List<object>>();
+            stack.Push(packet);
+
+            var current = packet;
+            for (int i = 0; i < input.Length; ++i)
+            {
+                var token = input[i];
+                if (token == ',') continue;
+                
+                if (token == '[')
+                {
+                    var list = new List<object>();
+                    current.Add(list);
+                    stack.Push(current);
+                    current = list;
+                }
+                else if (token == ']')
+                {
+                    if (!stack.TryPop(out current))
+                        break;
+                }
+                else
+                {
+                    var index = input.IndexOfAny(new[] { ',', ']' }, i);
+                    var value = input[i..index];
+                    current.Add(int.Parse(value));
+                    i = index;
+                }
+            }
+
+            return new Packet((List<object>)packet[0]);
+        }
+
+        public static bool Compare((Packet, Packet) packets)
+            => CompareInternal(packets).Item1;
+
+        static (bool, bool exitEarly) CompareInternal((Packet, Packet) packets)
+        {
+            var (p1, p2) = packets;
+
+            for(int i = 0; i < p1.packets.Count; ++i)
+            {
+                if (i > p2.packets.Count - 1)
+                    return (false, true);
+
+                var p1item = p1.packets[i];
+                var p2item = p2.packets[i];
+
+                if (p1item is int int1 && p2item is int int2)
+                {
+                    if (int1 < int2) return (true, true);
+                    if (int1 > int2) return (false, true);
+                }
+                else if (p1item is List<object> list1 && p2item is List<object> list2)
+                {
+                    var result = CompareInternal((new Packet(list1), new Packet(list2)));
+                    if (result.Item2) return result;
+                }
+                else
+                {
+                    var v1 = p1item is List<object> ? (List<object>)p1item : new List<object> { p1item }; 
+                    var v2 = p2item is List<object> ? (List<object>)p2item : new List<object> { p2item };
+
+                    p1.packets[i] = v1;
+                    p2.packets[i] = v2;
+                    i--;
+                }
+            }
+
+            return (true, p1.packets.Count < p2.packets.Count);
+        }
     }
 }

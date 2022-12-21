@@ -2,8 +2,6 @@
 
 public partial class PuzzleSolver
 {
-    const bool DEBUG = true;
-
     readonly string input;
     readonly List<int> board = new List<int>() { Floor };
     readonly Dictionary<int, int> heightMap = new Dictionary<int, int>();
@@ -11,19 +9,26 @@ public partial class PuzzleSolver
     public PuzzleSolver()
     {
         this.input = File.ReadAllText("Input001.txt");
+        PlayGame();
     }
 
     public long SolvePart1()
     {
+        return board.Count - 1;
+    }
+
+    public long SolvePart2()
+    {
+        return FindPattern();
+    }
+
+    void PlayGame()
+    {
         int top = 1;
         int currentJet = 0;
-        int round = 0;
 
-        for (round = 0; round < 4000; ++round)
+        for (int round = 0; round < 4000; ++round)
         {
-            if (round % 10000 == 0)
-                Console.WriteLine(round);
-
             var piece = Pieces[round % 5];
             var y = top + 3;
 
@@ -41,7 +46,7 @@ public partial class PuzzleSolver
                     if (!IsCollision(right, y))
                         piece = right;
                 }
-                
+
                 if (IsCollision(piece, y - 1))
                 {
                     var setPiece = SetPiece(piece);
@@ -68,16 +73,10 @@ public partial class PuzzleSolver
 
             heightMap[round + 1] = top - 1;
         }
-
-        FindPattern(round);
-        ExportGame();
-        return board.Count - 1;
     }
 
-    void FindPattern(int round)
+    long FindPattern()
     {
-        Console.WriteLine("Looking for patterns...");
-
         int window = 10;
         int prePatternHeight = 0;
         bool found = false;
@@ -92,7 +91,7 @@ public partial class PuzzleSolver
                 {
                     prePatternHeight = y - 1;
                     found = true;
-                    goto DONE;
+                    goto DONE; // yup; it's a goto
                 };
             }
 
@@ -104,7 +103,7 @@ public partial class PuzzleSolver
         if (!found)
         {
             Console.WriteLine("No pattern found!");
-            return;
+            return 0;
         }
 
         var startPattern = heightMap.SkipWhile(_ => _.Value < prePatternHeight).First();
@@ -115,50 +114,7 @@ public partial class PuzzleSolver
         long p2q = p1 / endPatternRound;
         int p2r = (int)(p1 % endPatternRound);
         int p3 = heightMap[startPatternRound + p2r] - prePatternHeight;
-        long answer = prePatternHeight + p2q * window + p3;
-
-        Console.WriteLine($"""
-
-            Pre Pattern Height: {prePatternHeight}
-            Start Pattern Round: {startPatternRound}
-            End Pattern Round: {endPatternRound}
-            Pattern Height: {window}
-
-            p1: {p1}
-            p2q: {p2q}
-            p2r: {p2r}
-            p3: {p3}
-
-            answer: {answer}
-
-            """);
-    }
-
-    void ExportGame()
-    {
-        if (!DEBUG) return;
-
-        var sb = new StringBuilder();
-        for (int y = board.Count - 1; y > 0; --y)
-        {
-            string height = "";
-            string round = "";
-
-            var heights = heightMap.Where(_ => _.Value == y).ToList();
-            if (heights.Count > 0)
-            {
-                var currentHeight = heights.MaxBy(_ => _.Key);
-                round = currentHeight.Key.ToString();
-                height = currentHeight.Value.ToString();
-            }
-
-            var line = Convert.ToString(board[y], 2).PadLeft(9, '0')
-                .Replace("1", "#")
-                .Replace("0", ".");
-            sb.AppendLine($"|{line[1..^1]}| {round} - {height}");
-        }
-        sb.AppendLine("+-------+");
-        File.WriteAllText("game.txt", sb.ToString());
+        return prePatternHeight + p2q * window + p3;
     }
 
     bool IsCollision(int[] piece, int y)
@@ -174,8 +130,6 @@ public partial class PuzzleSolver
 
         return false;
     }
-
-    bool IsBitSet(int piece, int bitToCheck) => (piece & (1 << bitToCheck - 1)) != 0;
 
     int[] SetPiece(int[] piece)
     {
@@ -208,9 +162,29 @@ public partial class PuzzleSolver
         return newPiece;
     }
 
-    public long SolvePart2()
+    void ExportGame()
     {
-        return 0;
+        var sb = new StringBuilder();
+        for (int y = board.Count - 1; y > 0; --y)
+        {
+            string height = "";
+            string round = "";
+
+            var heights = heightMap.Where(_ => _.Value == y).ToList();
+            if (heights.Count > 0)
+            {
+                var currentHeight = heights.MaxBy(_ => _.Key);
+                round = currentHeight.Key.ToString();
+                height = currentHeight.Value.ToString();
+            }
+
+            var line = Convert.ToString(board[y], 2).PadLeft(9, '0')
+                .Replace("1", "#")
+                .Replace("0", ".");
+            sb.AppendLine($"|{line[1..^1]}| {round} - {height}");
+        }
+        sb.AppendLine("+-------+");
+        File.WriteAllText("game.txt", sb.ToString());
     }
 
     static int Floor = 0b111111111;

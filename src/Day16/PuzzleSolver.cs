@@ -1,5 +1,7 @@
 ﻿using QuickGraph;
+using QuickGraph.Algorithms;
 using System.Diagnostics;
+using System.Security.Cryptography;
 using System.Text.RegularExpressions;
 
 public partial class PuzzleSolver
@@ -25,238 +27,242 @@ public partial class PuzzleSolver
             select (start: n1, end: n2)
         ).Select(_ => ShortestPath(_.start)(_.end).ToList()).ToList();
 
-        // get all possible paths that hit all important nodes
-        var importantNodes = graph.Vertices.Where(ImportantNode).ToList();
-        
-        foreach (var pair in pairs.Where(_ => _[0].Name == "AA"))
-        {
-            var path = GetPaths(new[] { pair }.ToList(), pairs, importantNodes);
-            
-            long pressure = 0;
-            foreach (var p in path)
-            {
-                if (p > pressure)
-                {
-                    pressure = p;
-                    Console.WriteLine(pressure);
-                }
-            }
-        }
-
-        return 0;
+        return GetBestPressure(pairs);
     }
 
     public long SolvePart2()
     {
-        return 0;
+        var pairs = (
+            from n1 in graph.Vertices.Where(_ => StartNode(_) || ImportantNode(_))
+            from n2 in graph.Vertices.Where(_ => StartNode(_) || ImportantNode(_))
+            where n1 != n2
+            where n2.Name != "AA"
+            select (start: n1, end: n2)
+        ).Select(_ => ShortestPath(_.start)(_.end).ToList()).ToList();
+
+        return GetElephantPressure(pairs);
     }
 
-    long GetPressure(List<List<Valve>> paths)
+    long GetBestPressure(List<List<Valve>> pairs)
     {
-        var pressures = new List<long>();
-        foreach (var path in paths)
-            pressures.Add(GetPressure(path));
+        var graph = new AdjacencyGraph<Valve, Edge<Valve>>();
+        var costs = new Dictionary<Edge<Valve>, double>();
 
-        return pressures.Max();
-    }
-
-    long GetPressure(List<Valve> path)
-    {
-        //var answer = new List<Valve>
-        //{
-        //    new Valve {Name = "AA"},
-        //    new Valve {Name = "DD"},
-        //    new Valve {Name = "CC"},
-        //    new Valve {Name = "BB"},
-        //    new Valve {Name = "AA"},
-        //    new Valve {Name = "II"},
-        //    new Valve {Name = "JJ"},
-        //    new Valve {Name = "II"},
-        //    new Valve {Name = "AA"},
-        //    new Valve {Name = "DD"},
-        //    new Valve {Name = "EE"},
-        //    new Valve {Name = "FF"},
-        //    new Valve {Name = "GG"},
-        //    new Valve {Name = "HH"},
-        //    new Valve {Name = "GG"},
-        //    new Valve {Name = "FF"},
-        //    new Valve {Name = "EE"},
-        //    new Valve {Name = "DD"},
-        //    new Valve {Name = "CC"},
-        //};
-
-        var pressures = new List<(int ValveIndex, long Pressure, List<(Valve Valve, bool Open)> OpenValves)>();
-
-        int time = 0;
-        while (true)
+        foreach (var pair in pairs)
         {
-            // increase time
-            time++;
+            var source = pair[0];
+            var target = pair[^1];
+            double cost = pair.Count;
 
-            // we're done if all path lines time > 30
-            if (time > 30) break;
+            var edge = new Edge<Valve>(source, target);
+            graph.AddVerticesAndEdge(edge);
+            costs.Add(edge, cost);
+        }
 
-            // check pressure
-            for (int i = 0; i < pressures.Count; ++i)
+        var func = AlgorithmExtensions.GetIndexer(costs);
+
+        var startState = new State
+        {
+            Valve = graph.Vertices.First(_ => _.Name == "AA"),
+            Pressure = 0,
+            TimeRemaining = 26
+        };
+
+        var queue = new Queue<State>();
+        queue.Enqueue(startState);
+
+        long pressure = 0;
+        long count = 0;
+        while (queue.TryDequeue(out var state))
+        {
+            pressure = Math.Max(state.Pressure, pressure);
+
+            foreach (var neighbor in graph.OutEdges(state.Valve))
             {
-                var (_, pressure, openValves) = pressures[i];
+                if (state.Visited.Contains(neighbor.Target))
+                    continue;
+
+                var timeRemaning = state.TimeRemaining - (int)func(neighbor);
+                if (timeRemaning < 0)
+                    continue;
+
+                queue.Enqueue(new State
+                {
+                    Valve = neighbor.Target,
+                    Pressure = state.Pressure + (timeRemaning * neighbor.Target.Rate),
+                    TimeRemaining = timeRemaning,
+                    Visited = state.Visited.Concat(new[] { state.Valve } ).ToHashSet()
+                });
                 
-                pressure += openValves.Where(_ => _.Open).Select(_ => _.Valve.Rate).Sum();
-                pressures[i] = pressures[i] with
-                {
-                    Pressure = pressure,
-                };
-            }
-
-            // get combinations for whether to open the valve or not
-            if (pressures.Count == 0)
-            {
-                pressures.Add((0, 0, new List<(Valve, bool)> { (path[0], false) }));
-            } 
-            else
-            {
-                var updatedPressures = new List<(int ValveIndex, long Pressure, List<(Valve Valve, bool Open)> OpenValves)>();
-                for (int i = 0; i < pressures.Count; ++i)
-                {
-                    var (valveIndex, pressure, openValves) = pressures[i];
-                    var valve = path[valveIndex];
-
-                    var openClosed = new List<(Valve valve, bool open)>
-                    {
-                        (valve, false)
-                    };
-
-                    if (valve.Rate > 0 && !openValves.Contains((valve, true)))
-                    {
-                        openClosed.Add((valve, true));
-                    }
-
-                    updatedPressures.AddRange((
-                        from v in openClosed
-                        from p in new[] { pressures[i] }
-                        select p with
-                        {
-                            OpenValves = p.OpenValves.Concat(new[] { v }).ToList()
-                        }
-                    ).ToList());
-                }
-                pressures = updatedPressures;
-            }
-
-            // check whether to move or open a valve
-            for (int i = 0; i < pressures.Count; ++i)
-            {
-                var (valveIndex, pressure, openValves) = pressures[i];
-
-                if (!openValves[^1].Open)
-                {
-                    if (valveIndex < path.Count - 1)
-                        valveIndex++;
-                }
-
-                pressures[i] = pressures[i] with
-                {
-                    ValveIndex = valveIndex
-                };
+                count = Math.Max(queue.Count, count);
             }
         }
 
-        return pressures
-            .Select(_ => _.Pressure)
-            .Max();
+        return pressure;
     }
 
-    IEnumerable<long> GetPaths(List<List<Valve>> segments, List<List<Valve>> shortestPaths, List<Valve> importantNodes)
+    long GetElephantPressure(List<List<Valve>> pairs)
     {
-        var paths = (
-            from segment in segments
-            from shortestPath in shortestPaths
-            where segment[^1] == shortestPath[0]
-            select new[] { segment, shortestPath }.ToList()
-        ).ToList();
+        var graph = new AdjacencyGraph<Valve, Edge<Valve>>();
+        var costs = new Dictionary<Edge<Valve>, double>();
 
-        while (true)
+        foreach (var pair in pairs)
         {
-            var newPathSegments = new List<List<List<Valve>>>();
-            foreach (var path in paths)
+            var source = pair[0];
+            var target = pair[^1];
+            double cost = pair.Count;
+
+            var edge = new Edge<Valve>(source, target);
+            graph.AddVerticesAndEdge(edge);
+            costs.Add(edge, cost);
+        }
+
+        var func = AlgorithmExtensions.GetIndexer(costs);
+
+        var initialState = new State
+        {
+            Valve = graph.Vertices.First(_ => _.Name == "AA"),
+            Pressure = 0,
+            TimeRemaining = 26
+        };
+
+        var hash = new HashSet<(State, State)>();
+        var queue = new Queue<(State, State)>();
+
+        hash.Add((initialState, initialState));
+        queue.Enqueue((initialState, initialState));
+
+        long maxPressure = 0;
+        (State, State) maxState;
+
+        while (queue.TryDequeue(out var state))
+        {
+            var (state1, state2) = state;
+
+            var pressure =  Math.Max(state1.Pressure + state2.Pressure, maxPressure);
+            if (pressure > maxPressure)
             {
-                if (importantNodes.All(_ => path.SelectMany(v => v).Contains(_)))
+                maxPressure = pressure;
+                maxState = state;
+            }
+
+            var newState1 = new List<State>();
+            foreach (var state1Neighbor in graph.OutEdges(state1.Valve))
+            {
+                var state1TimeRemaining = state1.TimeRemaining - (int)func(state1Neighbor);
+                if (state1TimeRemaining < 0) continue;
+
+                var state1Visited = state1.Visited.Contains(state1Neighbor.Target);
+                var state2Visited = state2.Visited.Contains(state1Neighbor.Target) || state2.Valve == state1Neighbor.Target;
+                if (state1TimeRemaining > 0 && !state1Visited && !state2Visited)
                 {
-                    var p = RemoveDuplicateNodes(paths);
-                    foreach (var p1 in p)
+                    newState1.Add(new State
                     {
-                        var pressure = GetPressure(p1);
-                        yield return pressure;
-                    }
+                        Valve = state1Neighbor.Target,
+                        Pressure = state1.Pressure + (state1TimeRemaining * state1Neighbor.Target.Rate),
+                        TimeRemaining = state1TimeRemaining,
+                        Visited = state1.Visited.Concat(new[] { state1.Valve }).ToHashSet()
+                    });
                 }
-
-                newPathSegments.Add((
-                    from segment in new[] { path[^1][^1] }
-                    from shortestPath in shortestPaths
-                    where segment == shortestPath[0]
-                    where !path.Any(_ => _[0] == shortestPath[^1] || _[^1] == shortestPath[^1])
-                    select shortestPath
-                ).ToList());
             }
 
-            var newPath = new List<List<List<Valve>>>();
-            for (int i = 0; i < newPathSegments.Count; ++i)
+            if (newState1.Count == 0) newState1.Add(state1);
+
+
+            var newState2 = new List<State>();
+            foreach (var state2Neighbor in graph.OutEdges(state2.Valve))
             {
-                var newPathSegment = newPathSegments[i];
-                for (int j = 0; j < newPathSegment.Count; ++j)
+                var state2TimeRemaining = state2.TimeRemaining - (int)func(state2Neighbor);
+                if (state2TimeRemaining < 0) continue;
+
+                var state1Visited = state1.Visited.Contains(state2Neighbor.Target) || state1.Valve == state2Neighbor.Target;
+                var state2Visited = state2.Visited.Contains(state2Neighbor.Target);
+                if (state2TimeRemaining > 0 && !state1Visited && !state2Visited)
                 {
-                    var newSegment = newPathSegment[j];
-                    var p = new List<List<Valve>>();
-                    p.AddRange(paths[i]);
-                    p.Add(newSegment);
-                    newPath.Add(p);
+                    newState2.Add(new State
+                    {
+                        Valve = state2Neighbor.Target,
+                        Pressure = state2.Pressure + (state2TimeRemaining * state2Neighbor.Target.Rate),
+                        TimeRemaining = state2TimeRemaining,
+                        Visited = state2.Visited.Concat(new[] { state2.Valve }).ToHashSet()
+                    });
                 }
             }
 
-            if (newPath.Count == 0)
-            {
-                break;
-            }
+            if (newState2.Count == 0) newState1.Add(state2);
 
-            paths = newPath;
+            var newState = (
+                from s1 in newState1
+                from s2 in newState2
+                where s1.Valve != s2.Valve
+                select (s1, s2)
+            ).ToList();
+
+            foreach (var s in newState)
+            {
+                var (s1, s2) = s;
+                if (hash.Contains(s)) continue;
+                if (state1.Visited.Contains(s2.Valve) ||
+                    state2.Visited.Contains(s1.Valve) ||
+                    state1.Valve == s2.Valve ||
+                    state2.Valve == s1.Valve ||
+                    s1.Visited.Contains(s2.Valve) ||
+                    s2.Visited.Contains(s1.Valve))
+                    continue;
+
+                hash.Add(s);
+                queue.Enqueue(s);
+            }
         }
+
+        return maxPressure;
     }
 
-    List<List<Valve>> RemoveDuplicateNodes(List<List<List<Valve>>> paths)
+    class State : IEquatable<State?>
     {
-        var p1 = paths.Select(_ => _.SelectMany(c => c).ToList()).ToList();
-        var p2 = new List<List<Valve>>();
+        public State() { }
 
-        foreach (var path in p1)
+        public State(Valve valve, int timeRemaining, long pressure, HashSet<Valve> visited)
         {
-            var valves = new List<Valve>();
-            valves.Add(path[0]);
-
-            for (int i = 1; i < path.Count; ++i)
-            {
-                if (valves[^1] != path[i])
-                    valves.Add(path[i]);
-            }
-
-            p2.Add(valves);
+            this.Valve = valve;
+            this.TimeRemaining = timeRemaining;
+            this.Pressure = pressure;
+            this.Visited = visited;
         }
 
-        return p2;
-    }
+        public Valve Valve { get; init; } = new();
+        public int TimeRemaining { get; init; }
+        public long Pressure { get; init; }
+        public HashSet<Valve> Visited { get; init; } = new();
 
-    List<List<Valve>> RemoveDuplicatePaths(List<List<Valve>> paths)
-    {
-        var p = new List<List<Valve>>();
-        
-        for (int i = 0; i < paths.Count; ++i)
+        public override bool Equals(object? obj)
         {
-            if (!p.Any(_ => Enumerable.SequenceEqual(_, paths[i])))
-            {
-                p.Add(paths[i]);
-            }
+            return Equals(obj as State);
         }
 
-        return p;
+        public bool Equals(State? other)
+        {
+            return other is not null &&
+                   EqualityComparer<Valve>.Default.Equals(Valve, other.Valve) &&
+                   TimeRemaining == other.TimeRemaining &&
+                   Pressure == other.Pressure &&
+                   Visited.SetEquals(other.Visited);
+        }
+
+        public override int GetHashCode()
+        {
+            return HashCode.Combine(Valve, TimeRemaining, Pressure, Visited);
+        }
+
+        public static bool operator ==(State? left, State? right)
+        {
+            return EqualityComparer<State>.Default.Equals(left, right);
+        }
+
+        public static bool operator !=(State? left, State? right)
+        {
+            return !(left == right);
+        }
     }
 
     bool StartNode(Valve valve) => valve.Name == "AA";

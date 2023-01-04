@@ -1,11 +1,12 @@
-﻿using System;
-
-public partial class PuzzleSolver
+﻿public partial class PuzzleSolver
 {
     // -3629
+    // -4832
     // -19918
     // -5226
     // -183
+    // -5631
+    // -16205
 
     readonly List<string> input;
 
@@ -14,19 +15,22 @@ public partial class PuzzleSolver
         this.input = File.ReadAllLines("Input001.txt").ToList();
     }
 
-
     public long SolvePart1()
     {
-        var list = this.input.Select(long.Parse).ToList();
+        var list = this.input
+            .Select((v, i) => (Order: (long)i, Value: long.Parse(v)))
+            .ToList();
+
         var crypto = new CircularList(list.ToList());
 
         //Console.WriteLine(string.Join(", ", crypto));
 
         foreach (var num in list)
         {
-            crypto.Move(num);
-            //Console.WriteLine(string.Join(", ", crypto));
+            crypto.Move(num.Order);
         }
+
+        //Console.WriteLine(string.Join(", ", crypto));
 
         return crypto.GroveCoordinate();
     }
@@ -36,69 +40,62 @@ public partial class PuzzleSolver
         return 0;
     }
 
-    class CircularList : List<long>
-    {
-        private int index;
+   class CircularList : List<(long Order, long Value)>, IEnumerable<(long Order, long Value)>
+   {
+        int index = 0;
 
-        public CircularList(IEnumerable<long> list)
+        public CircularList(List<(long, long)> list)
             : base(list) { }
-
-        public long Current() => this[index];
-
-        public long Next()
-        {
-            this.index++;
-            this.index %= Count;
-
-            return this[index];
-        }
-
-        public long Previous()
-        {
-            this.index--;
-            if (this.index < 0)
-                this.index = Count - 1;
-            return this[index];
-        }
-
-        public void Move(long item)
-        {
-            if (item == 0) return;
-
-            while (this.Next() != item) { }
-
-            if (item > 0)
-            {
-                for (int i = 0; i < item; ++i)
-                {
-                    var current = (i: this.index, v: this[this.index]);
-                    var next = Next();
-                    this[current.i] = next;
-                    this[this.index] = current.v;
-                }
-            }
-            else
-            {
-                for (int i = 0; i < Math.Abs(item); ++i)
-                {
-                    var current = (i: this.index, v: this[this.index]);
-                    var prev = Previous();
-                    this[current.i] = prev;
-                    this[this.index] = current.v;
-                }
-            }
-        }
 
         public long GroveCoordinate()
         {
-            while (this.Next() != 0) { }
+            var zero = this.FindIndex(0, _ => _.Value == 0);
+            var n1000 = this[(zero + 1000) % (this.Count)].Value;
+            var n2000 = this[(zero + 2000) % (this.Count)].Value;
+            var n3000 = this[(zero + 3000) % (this.Count)].Value;
 
-            var l = new List<long>() { 0 };
+            return n1000 + n2000 + n3000;
+        }
 
-            for (int i = 0; i < 3000; ++i)
-                l.Add(this.Next());
+        public void Move(long order)
+        {
+            var item = this.Select((v, i) => (i, v)).First(_ => _.v.Order == order);
+            var value = item.v.Value;
+            var index = item.i;
 
-            return l[1000] + l[2000] + l[3000];
+            if (value == 0) return;
+
+            if (value > 0)
+            {
+                int newIndex = (int)((index + value) % (this.Count));
+
+                this.Remove(item.v);
+                this.Insert(newIndex, item.v);
+            }
+            else
+            {
+                var newIndex = index;
+                for (int i = 0; i < Math.Abs(value); ++i)
+                {
+                    newIndex--;
+                    newIndex = newIndex < 0 ? this.Count - 1 : newIndex;
+
+                    var prev = this[newIndex];
+                    this[index] = prev;
+                    this[newIndex] = item.v;
+                    index = newIndex;
+                }
+            }
+        }
+
+        public IEnumerable<long> GetNumbers()
+        {
+            while (true)
+            {
+                yield return this[index].Value;
+                index++;
+                index = index > this.Count - 1 ? 0 : index;
+            }
         }
     }
 }

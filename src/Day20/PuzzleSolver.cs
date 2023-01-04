@@ -18,19 +18,15 @@
     public long SolvePart1()
     {
         var list = this.input
-            .Select((v, i) => (Order: (long)i, Value: long.Parse(v)))
+            .Select((v, i) => (Order: i, Value: int.Parse(v)))
             .ToList();
 
         var crypto = new CircularList(list.ToList());
-
-        //Console.WriteLine(string.Join(", ", crypto));
 
         foreach (var num in list)
         {
             crypto.Move(num.Order);
         }
-
-        //Console.WriteLine(string.Join(", ", crypto));
 
         return crypto.GroveCoordinate();
     }
@@ -40,11 +36,11 @@
         return 0;
     }
 
-   class CircularList : List<(long Order, long Value)>, IEnumerable<(long Order, long Value)>
+   class CircularList : List<(int Order, int Value)>
    {
         int index = 0;
 
-        public CircularList(List<(long, long)> list)
+        public CircularList(List<(int, int)> list)
             : base(list) { }
 
         public long GroveCoordinate()
@@ -59,18 +55,17 @@
 
         public void Move(long order)
         {
-            var item = this.Select((v, i) => (i, v)).First(_ => _.v.Order == order);
-            var value = item.v.Value;
-            var index = item.i;
+            var index = this.FindIndex(_ => _.Order == order);
+            var item = this[index];
+            var value = this[index].Value;
 
             if (value == 0) return;
 
             if (value > 0)
             {
-                int newIndex = (int)((index + value) % (this.Count));
-
-                this.Remove(item.v);
-                this.Insert(newIndex, item.v);
+                int newIndex = (index + value) % (this.Count - 1);
+                this.RemoveAt(index);
+                this.Insert(newIndex, item);
             }
             else
             {
@@ -82,13 +77,13 @@
 
                     var prev = this[newIndex];
                     this[index] = prev;
-                    this[newIndex] = item.v;
+                    this[newIndex] = item;
                     index = newIndex;
                 }
             }
         }
 
-        public IEnumerable<long> GetNumbers()
+        public IEnumerable<int> GetNumbers()
         {
             while (true)
             {

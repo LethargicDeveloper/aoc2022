@@ -2,10 +2,6 @@
 using System.Text;
 using System.Text.RegularExpressions;
 
-// 66368
-// 151055
-// 166103
-
 public partial class PuzzleSolver
 {
     readonly string input;
@@ -321,37 +317,6 @@ class MonkeyMapCube
         return (1000 * (pos.Y + 1)) + (4 * (pos.X + 1)) + facing;
     }
 
-    void PrintCube(string filename = "cube.txt")
-    {
-        Console.Clear();
-        var sb = new StringBuilder();
-
-        for (int y = 0; y < cube.Faces.Count; ++y)
-        {
-            for (int y1 = 0; y1 < cube.Size; ++y1)
-            {
-                for (int x = 0; x < cube.Faces[0].Count; ++x)
-                {
-                    var faceIndex = cube.Faces[y][x];
-                    if (faceIndex == 0)
-                    {
-                        sb.Append(new string(' ', cube.Size));
-                    }
-                    else
-                    {
-                        var f = cube[faceIndex];
-                        sb.Append(new string(f[y1]));
-                    }
-                }
-
-                sb.AppendLine();
-            }
-        }
-
-        File.WriteAllText(filename, sb.ToString());
-        //Console.WriteLine(sb.ToString());
-    }
-
     ((Point pos, int face), int facing) GetEndingPos()
     {
         var pos = GetStartingPos();
@@ -385,15 +350,6 @@ class MonkeyMapCube
         var newPos = pos + dir;
         var newFace = face;
         var newFacing = facing;
-
-        cube[face][pos.Y][pos.X] = facing switch
-        {
-            Right => '>',
-            Down => 'V',
-            Left => '<',
-            Up => '^',
-            _ => throw new Exception("Invalid facing")
-        };
 
         if (facing == Right && newPos.X > max)
         {

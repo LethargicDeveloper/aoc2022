@@ -79,4 +79,5 @@ public struct Point : IEquatable<Point>
 
     public override int GetHashCode()
         => HashCode.Combine(this.X, this.Y);
+
 }

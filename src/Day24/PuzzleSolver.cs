@@ -17,7 +17,8 @@ public partial class PuzzleSolver
 
     public long SolvePart2()
     {
-        return 0;
+        var bb = new BlizzardBasin(input);
+        return bb.ShortestPathWithSnacks();
     }
 
     class BlizzardBasin
@@ -77,6 +78,82 @@ public partial class PuzzleSolver
                 StartPos = startPos,
                 EndPos = endPos,
             }, b);
+        }
+
+        public int ShortestPathWithSnacks()
+        {
+            int shortestPath = 0;
+
+            foreach (var initialState in new[] { (map.StartPos, map.EndPos), (map.EndPos, map.StartPos), (map.StartPos, map.EndPos) })
+            {
+                var (startPos, endPos) = initialState;
+
+                var hash = new HashSet<State>();
+                var queue = new Queue<State>();
+                queue.Enqueue(new State
+                {
+                    Minute = 0,
+                    Pos = startPos,
+                    Blizzards = blizzardSpawnPos
+                });
+
+                while (queue.TryDequeue(out var state))
+                {
+                    if (state.Pos == endPos)
+                    {
+                        shortestPath += state.Minute;
+                        blizzardSpawnPos = state.Blizzards.ToList();
+                        break;
+                    }
+
+                    var newBlizzardPos = new List<Blizzard>();
+                    foreach (var blizzard in state.Blizzards)
+                    {
+                        var pos = blizzard.Pos + Directions[blizzard.Dir];
+                        if (pos.X < 1) pos = (map.Width - 1, pos.Y);
+                        if (pos.X > map.Width - 1) pos = (1, pos.Y);
+                        if (pos.Y < 1) pos = (pos.X, map.Height - 1);
+                        if (pos.Y > map.Height - 1) pos = (pos.X, 1);
+
+                        newBlizzardPos.Add(new Blizzard(pos, blizzard.Dir));
+                    }
+
+                    var neighbors = Directions.Values
+                        .Select(pos => pos + state.Pos)
+                        .Where(pos => !newBlizzardPos.Select(b => b.Pos).Contains(pos))
+                        .Where(pos => pos == endPos || (pos.X >= 1 && pos.X <= map.Width - 1 && pos.Y >= 1 && pos.Y <= map.Height - 1))
+                        .Where(pos => map[pos.Y][pos.X] != '#')
+                        .ToList();
+
+                    if (!newBlizzardPos.Any(_ => _.Pos == state.Pos))
+                    {
+                        var newState = new State
+                        {
+                            Minute = state.Minute + 1,
+                            Pos = state.Pos,
+                            Blizzards = newBlizzardPos
+                        };
+
+                        if (hash.Add(newState))
+                            queue.Enqueue(newState);
+                    }
+
+                    foreach (var neighbor in neighbors)
+                    {
+                        var newState = new State
+                        {
+                            Minute = state.Minute + 1,
+                            Pos = neighbor,
+                            Blizzards = newBlizzardPos
+                        };
+
+                        if (hash.Add(newState))
+                            queue.Enqueue(newState);
+                    }
+                }
+            }
+
+            return shortestPath;
         }
 
         public int ShortestPath()

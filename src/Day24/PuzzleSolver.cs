@@ -270,7 +270,6 @@ public partial class PuzzleSolver
             public bool Equals(State? other)
             {
                 return other is not null &&
-                       //Minute == other.Minute &&
                        Pos == other.Pos &&
                        Enumerable.SequenceEqual(Blizzards, other.Blizzards);
             }
@@ -278,7 +277,6 @@ public partial class PuzzleSolver
             public override int GetHashCode()
             {
                 var hash = new HashCode();
-                //hash.Add(Minute);
                 hash.Add(Pos);
                 Blizzards.ForEach(hash.Add);
 

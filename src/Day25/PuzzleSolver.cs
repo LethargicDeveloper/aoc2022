@@ -4,10 +4,10 @@
 
     public PuzzleSolver()
     {
-        this.input = File.ReadAllText("InputExample.txt");
+        this.input = File.ReadAllText("Input001.txt");
     }
         
-    public long SolvePart1()
+    public string SolvePart1()
     {
         var dec = this.input
             .Split("\r\n")
@@ -15,7 +15,7 @@
             .Select(_ => _.ToDecimal())
             .Sum();
 
-        return 0;
+        return Snafu.FromDecimal(dec);
     }
 
     public long SolvePart2()
@@ -32,13 +32,13 @@
             this.value = value;
         }
 
-        public int ToDecimal()
+        public long ToDecimal()
         {
-            int dec = 0;
+            long dec = 0;
             for (int i = 0; i < value.Length; ++i)
             {
                 char digit = value[i];
-                int place = (int)Math.Pow(5, (value.Length - i - 1));
+                long place = (long)Math.Pow(5, (value.Length - i - 1));
                 dec += digit switch
                 {
                     '-' => -1 * place,
@@ -50,17 +50,28 @@
             return dec;
         }
 
-        public static Snafu FromDecimal(int dec)
+        public static Snafu FromDecimal(long dec)
         {
-            int search = 0;
-
-            var queue = new Queue<int>();
-            queue.Enqueue(0);
-
-            while (queue.TryDequeue(out int val))
+            var num = "";
+            while (dec > 0)
             {
-                if (val == search) break;
+                num += (dec % 5) switch
+                {
+                    0 => "0",
+                    1 => "1",
+                    2 => "2",
+                    3 => "=",
+                    4 => "-",
+                    _ => throw new Exception("bad result")
+                };
+
+                dec = (long)Math.Round(dec / 5.0);
             }
+
+            return new Snafu(new string(num.Reverse().ToArray()));
         }
+
+        public static implicit operator string(Snafu snafu)
+            => snafu.value;
     }
 }
